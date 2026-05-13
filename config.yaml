@@ -1,0 +1,18 @@
+
+chunk_size: 100
+max_workers: 4
+
+required_headers:
+  equipment:
+    - Date
+    - Project Code
+    - T Cycle Time (seconds)
+
+  mpdm:
+    - Date
+    - Project Code
+    - T Cycle Time (seconds)
+
+  dailyvariables:
+    - Date
+    - Project Code
