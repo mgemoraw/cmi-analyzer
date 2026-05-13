@@ -1,0 +1,74 @@
+# app/config/config.yaml
+
+# ==========================================
+# APPLICATION SETTINGS
+# ==========================================
+
+app_name: Excel Batch Processor
+
+theme: dark
+
+# ==========================================
+# PROCESSING SETTINGS
+# ==========================================
+
+chunk_size: 100
+
+max_workers: 4
+
+# ==========================================
+# REQUIRED SHEETS
+# ==========================================
+
+required_sheets:
+
+  - equipment
+
+  - mpdm
+
+  - dailyvariables
+
+# ==========================================
+# REQUIRED HEADERS
+# ==========================================
+
+required_headers:
+
+  equipment:
+
+    - Date
+    - Project Code
+
+  mpdm:
+
+    - Date
+    - Project Code
+
+  dailyvariables:
+
+    - Date
+    - Project Code
+
+# ==========================================
+# OUTPUT SETTINGS
+# ==========================================
+
+output:
+
+  dailyvariables_file:
+    all_dailyvariables.xlsx
+
+  chunk_prefix:
+    dataset_chunk_
+
+# ==========================================
+# LOGGING
+# ==========================================
+
+logging:
+
+  level: INFO
+
+  save_logs: true
+
+  log_folder: logs

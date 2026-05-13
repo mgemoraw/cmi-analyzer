@@ -1,0 +1,37 @@
+excel_processor/
+│
+├── main.py
+├── requirements.txt
+├── config.yaml
+│
+├── core/
+│   ├── processor.py
+│   ├── reader.py
+│   ├── writer.py
+│   ├── formatter.py
+│   ├── validator.py
+│   └── models.py
+│
+├── workers/
+│   └── processing_worker.py
+│
+├── ui/
+│   ├── main_window.py
+│   ├── dashboard.py
+│   ├── logs_panel.py
+│   ├── controls_panel.py
+│   ├── statistics_panel.py
+│   ├── preview_panel.py
+│   └── styles.qss
+│
+├── services/
+│   ├── logger_service.py
+│   ├── config_service.py
+│   └── excel_service.py
+│
+├── assets/
+│   └── icons/
+│
+├── logs/
+├── output/
+└── input_files/
