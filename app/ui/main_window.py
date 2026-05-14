@@ -19,8 +19,18 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+
+from PySide6.QtCore import QThread
+
+from workers.processing_worker import (
+    ProcessingWorker
+)
+from core.utils import Utils
+
 
 
 class MainWindow(QMainWindow):
@@ -29,13 +39,18 @@ class MainWindow(QMainWindow):
 
         super().__init__()
 
-        self.setWindowTitle("Excel Batch Processor")
+        self.setWindowTitle("CMI Data Batch Processor")
 
         self.resize(1400, 900)
 
         self.setMinimumSize(1200, 800)
+        self.thread = None
+        self.worker = None
 
         self.build_ui()
+        self.load_stylesheet()
+
+        
 
     # =========================================================
     # BUILD UI
@@ -78,6 +93,34 @@ class MainWindow(QMainWindow):
         # STATUS BAR
         self.statusBar().showMessage("Ready")
 
+        # ==========================================
+        # CONNECT BUTTONS
+        # ==========================================
+
+        self.start_btn.clicked.connect(
+            self.start_processing
+        )
+
+        self.open_output_btn.clicked.connect(
+            self.open_output_folder
+        )
+
+    def load_stylesheet(self, stylesheet_name="stylesheet.qss"):
+
+        stylesheet_path = (
+            Path(__file__).resolve().parent
+            / "styles"
+            / stylesheet_name
+        )
+
+        if stylesheet_path.exists():
+            with open(stylesheet_path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        else:
+            print(
+                f"[WARNING] Stylesheet not found: {stylesheet_path}"
+            )
+
     # =========================================================
     # HEADER
     # =========================================================
@@ -90,7 +133,7 @@ class MainWindow(QMainWindow):
 
         container.setLayout(layout)
 
-        title = QLabel("Excel Batch Processor")
+        title = QLabel("CMI Data Batch Processor")
 
         title.setFont(QFont("Segoe UI", 24, QFont.Bold))
 
@@ -103,7 +146,6 @@ class MainWindow(QMainWindow):
         subtitle.setStyleSheet(
             "color: #aaaaaa;"
         )
-
         layout.addWidget(title)
 
         layout.addWidget(subtitle)
@@ -525,178 +567,137 @@ class MainWindow(QMainWindow):
             message
         )
 
+    def start_processing(self):
+        input_dir = self.input_edit.text().strip()
 
+        output_dir = self.output_edit.text().strip()
 
-# IMPORTANT ADDITIONS FOR main_window.py
+        if not input_dir:
 
-# ==========================================
-# ADD THESE IMPORTS
-# ==========================================
+            self.show_error(
+                "Please select input folder."
+            )
 
-from PySide6.QtCore import QThread
+            return
 
-from workers.processing_worker import (
-    ProcessingWorker
-)
+        if not output_dir:
 
-from core.utils import Utils
+            self.show_error(
+                "Please select output folder."
+            )
 
-# ==========================================
-# ADD THIS INSIDE __init__()
-# ==========================================
+            return
 
-self.thread = None
+        self.progress_bar.setValue(0)
 
-self.worker = None
+        self.log_text.clear()
 
-# ==========================================
-# CONNECT BUTTONS
-# ==========================================
-
-self.start_btn.clicked.connect(
-    self.start_processing
-)
-
-self.open_output_btn.clicked.connect(
-    self.open_output_folder
-)
-
-# ==========================================
-# ADD THESE METHODS
-# ==========================================
-
-def start_processing(self):
-
-    input_dir = self.input_edit.text().strip()
-
-    output_dir = self.output_edit.text().strip()
-
-    if not input_dir:
-
-        self.show_error(
-            "Please select input folder."
+        self.add_log(
+            "[INFO] Starting processing..."
         )
 
-        return
+        self.thread = QThread()
 
-    if not output_dir:
+        self.worker = ProcessingWorker(
 
-        self.show_error(
-            "Please select output folder."
+            input_dir=input_dir,
+
+            output_dir=output_dir,
+
+            chunk_size=self.chunk_spin.value(),
+
+            max_workers=self.worker_spin.value()
         )
 
-        return
+        self.worker.moveToThread(
+            self.thread
+        )
 
-    self.progress_bar.setValue(0)
+        # ======================================
+        # SIGNAL CONNECTIONS
+        # ======================================
 
-    self.log_text.clear()
+        self.thread.started.connect(
+            self.worker.run
+        )
 
-    self.add_log(
-        "[INFO] Starting processing..."
-    )
+        self.worker.finished.connect(
+            self.thread.quit
+        )
 
-    self.thread = QThread()
+        self.worker.finished.connect(
+            self.worker.deleteLater
+        )
 
-    self.worker = ProcessingWorker(
+        self.thread.finished.connect(
+            self.thread.deleteLater
+        )
 
-        input_dir=input_dir,
+        self.worker.log.connect(
+            self.add_log
+        )
 
-        output_dir=output_dir,
+        self.worker.progress.connect(
+            self.update_progress
+        )
 
-        chunk_size=self.chunk_spin.value(),
+        self.worker.statistics.connect(
+            self.handle_statistics
+        )
 
-        max_workers=self.worker_spin.value()
-    )
+        self.worker.current_file.connect(
+            self.update_current_file
+        )
 
-    self.worker.moveToThread(
-        self.thread
-    )
+        self.worker.error.connect(
+            self.show_error
+        )
 
-    # ======================================
-    # SIGNAL CONNECTIONS
-    # ======================================
+        self.worker.finished.connect(
+            self.processing_finished
+        )
 
-    self.thread.started.connect(
-        self.worker.run
-    )
+        self.start_btn.setEnabled(False)
 
-    self.worker.finished.connect(
-        self.thread.quit
-    )
+        self.thread.start()
 
-    self.worker.finished.connect(
-        self.worker.deleteLater
-    )
+    def processing_finished(self):
 
-    self.thread.finished.connect(
-        self.thread.deleteLater
-    )
+        self.add_log(
+            "[SUCCESS] Processing completed."
+        )
 
-    self.worker.log.connect(
-        self.add_log
-    )
+        self.show_success(
+            "Excel processing completed."
+        )
 
-    self.worker.progress.connect(
-        self.update_progress
-    )
+        self.start_btn.setEnabled(True)
 
-    self.worker.statistics.connect(
-        self.handle_statistics
-    )
+    def update_current_file(self, filename):
 
-    self.worker.current_file.connect(
-        self.update_current_file
-    )
+        self.current_file_label.setText(
+            f"Current File: {filename}"
+        )
 
-    self.worker.error.connect(
-        self.show_error
-    )
+    def handle_statistics(self, stats):
 
-    self.worker.finished.connect(
-        self.processing_finished
-    )
+        self.update_statistics(
 
-    self.start_btn.setEnabled(False)
+            files=stats["files"],
 
-    self.thread.start()
+            equipment=stats["equipment"],
 
-def processing_finished(self):
+            mpdm=stats["mpdm"],
 
-    self.add_log(
-        "[SUCCESS] Processing completed."
-    )
+            daily=stats["daily"],
 
-    self.show_success(
-        "Excel processing completed."
-    )
+            errors=stats["errors"]
+        )
 
-    self.start_btn.setEnabled(True)
+    def open_output_folder(self):
 
-def update_current_file(self, filename):
+        output_dir = self.output_edit.text().strip()
 
-    self.current_file_label.setText(
-        f"Current File: {filename}"
-    )
+        if output_dir:
 
-def handle_statistics(self, stats):
-
-    self.update_statistics(
-
-        files=stats["files"],
-
-        equipment=stats["equipment"],
-
-        mpdm=stats["mpdm"],
-
-        daily=stats["daily"],
-
-        errors=stats["errors"]
-    )
-
-def open_output_folder(self):
-
-    output_dir = self.output_edit.text().strip()
-
-    if output_dir:
-
-        Utils.open_folder(output_dir)
+            Utils.open_folder(output_dir)

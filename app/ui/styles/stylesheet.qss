@@ -1,0 +1,73 @@
+# app/gui/styles/dark_theme.qss
+
+QMainWindow {
+    background-color: #1e1e1e;
+}
+
+QGroupBox {
+    border: 1px solid #444;
+    border-radius: 10px;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton {
+    background-color: #1f4e78;
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #2d6ca2;
+}
+
+QPushButton:pressed {
+    background-color: #173956;
+}
+
+QLineEdit {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #555;
+}
+
+QTextEdit {
+    background-color: #121212;
+    color: #e0e0e0;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+QProgressBar {
+    border: 1px solid #555;
+    border-radius: 8px;
+    text-align: center;
+    height: 25px;
+}
+
+QProgressBar::chunk {
+    background-color: #2d6ca2;
+    border-radius: 8px;
+}
+
+QLabel {
+    color: #f0f0f0;
+}
+
+#statValue {
+    background-color: #252525;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+#startButton {
+    background-color: #2e7d32;
+}
+
+#startButton:hover {
+    background-color: #3c9a41;
+}

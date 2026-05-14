@@ -35,6 +35,26 @@ class ExcelProcessor:
         "dailyvariables"
     ]
 
+    SHEET_ALIASES = {
+        "equipment": [
+            "equipment",
+            "excavator",
+            "dozer",
+            "truck",
+            "roller",
+            "grader",
+            "labor",
+            "other",
+        ],
+        "mpdm": ["mpdm"],
+        "worksampling": [
+            "worksampling",],
+        "dailyvariables": [
+            "daily_variables",
+            "daily_variables"
+        ]
+    }
+
     # =====================================================
     # INIT
     # =====================================================
@@ -148,17 +168,23 @@ class ExcelProcessor:
     def get_sheet_name(
         self,
         available_sheets,
-        target_sheet
+        target_sheet_names
     ):
+
+        if isinstance(target_sheet_names, str):
+            target_sheet_names = [target_sheet_names]
 
         sheet_map = {
             s.lower(): s
             for s in available_sheets
         }
 
-        return sheet_map.get(
-            target_sheet.lower()
-        )
+        for target in target_sheet_names:
+            actual = sheet_map.get(target.lower())
+            if actual:
+                return actual
+
+        return None
 
     # =====================================================
     # READ EXCEL FILE
@@ -186,7 +212,7 @@ class ExcelProcessor:
 
             equipment_sheet = self.get_sheet_name(
                 excel.sheet_names,
-                "equipment"
+                self.SHEET_ALIASES["equipment"]
             )
 
             if equipment_sheet:
@@ -226,7 +252,7 @@ class ExcelProcessor:
 
             mpdm_sheet = self.get_sheet_name(
                 excel.sheet_names,
-                "mpdm"
+                self.SHEET_ALIASES["mpdm"]
             )
 
             if mpdm_sheet:
@@ -264,7 +290,7 @@ class ExcelProcessor:
 
             daily_sheet = self.get_sheet_name(
                 excel.sheet_names,
-                "dailyvariables"
+                self.SHEET_ALIASES["daily_variables"]
             )
 
             if daily_sheet:

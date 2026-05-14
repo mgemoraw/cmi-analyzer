@@ -1,7 +1,0 @@
-# build.bat
-
-pyinstaller ^
---windowed ^
---onefile ^
---name ExcelProcessor ^
-app/main.py

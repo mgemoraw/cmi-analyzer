@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 
 import qdarktheme
 
-from gui.main_window import MainWindow
+from ui.main_window import MainWindow
 
 
 def main():
@@ -17,9 +17,9 @@ def main():
     # DARK THEME
     # ==========================================
 
-    qdarktheme.setup_theme(
-        "dark"
-    )
+    # qdarktheme.setup_theme(
+    #     "dark"
+    # )
 
     # ==========================================
     # MAIN WINDOW
